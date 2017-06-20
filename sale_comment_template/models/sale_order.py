@@ -37,13 +37,15 @@ class SaleOrder(models.Model):
     def _set_note1(self):
         comment = self.comment_template1_id
         if comment:
-            self.note1 = comment.get_value(self.partner_id.id)
+            self.note1 = (self.note1 or '') + comment.get_value(self.partner_id.id)
+            self.comment_template1_id = False
 
     @api.onchange('comment_template2_id')
     def _set_note2(self):
         comment = self.comment_template2_id
         if comment:
-            self.note2 = comment.get_value(self.partner_id.id)
+            self.note2 = (self.note2 or '') + comment.get_value(self.partner_id.id)
+            self.comment_template2_id = False
 
     @api.multi
     def _prepare_invoice(self):
