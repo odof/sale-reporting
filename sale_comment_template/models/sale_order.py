@@ -53,7 +53,24 @@ class SaleOrder(models.Model):
         values.update({
             'comment_template1_id': self.comment_template1_id.id,
             'comment_template2_id': self.comment_template2_id.id,
-            'note1': self.note1,
-            'note2': self.note2,
         })
+        if self.company_id.of_keep_comments:
+            values.update({
+                'note1': self.note1,
+                'note2': self.note2,})
         return values
+
+class ResCompany(models.Model):
+    _inherit = 'res.company'
+
+    of_keep_comments = fields.Boolean(
+        string=u"(OF) Commentaires devis sur facture", default=True,
+        help=u"Permet de récupérer les commentaires du devis sur la facture finale")
+
+class OFSaleConfiguration(models.TransientModel):
+    _inherit = 'sale.config.settings'
+
+    of_keep_comments = fields.Boolean(
+        string=u"(OF) Commentaires devis sur facture",
+        help=u"Permet de récupérer les commentaires du devis sur la facture finale",
+        related="company_id.of_keep_comments")
