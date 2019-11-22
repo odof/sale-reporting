@@ -37,8 +37,8 @@
       <xpath expr="//group[@name='quotations_sales']" position="inside">
         <label for="of_keep_comments"/>
         <div name="of_keep_comments">
-          <field name="of_keep_comments" class="oe_inline"/>
-          <span>Récupérer les commentaires du devis sur la facture finale</span>
+          <field name="of_keep_comments" class="oe_inline" required="1"/>
+          <span> du devis sur la facture finale</span>
         </div>
       </xpath>
     </field>

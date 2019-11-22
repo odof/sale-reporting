@@ -54,23 +54,56 @@ class SaleOrder(models.Model):
             'comment_template1_id': self.comment_template1_id.id,
             'comment_template2_id': self.comment_template2_id.id,
         })
-        if self.company_id.of_keep_comments:
-            values.update({
-                'note1': self.note1,
-                'note2': self.note2,})
+        comments = self.company_id.of_keep_comments
+        values.update({
+            'note1': comments in (1, 2) and self.note1 or '',
+            'note2': comments in (1, 3) and self.note2 or '',
+            })
         return values
 
 class ResCompany(models.Model):
     _inherit = 'res.company'
 
-    of_keep_comments = fields.Boolean(
-        string=u"(OF) Commentaires devis sur facture", default=True,
+    @api.model
+    def _auto_init(self):
+        """
+        of_keep_comments passe de fields.Boolean à fields.Selection
+        """
+        cr = self._cr
+        cr.execute(
+            """SELECT DATA_TYPE """
+            """FROM INFORMATION_SCHEMA.COLUMNS """
+            """WHERE TABLE_NAME = 'res_company'"""
+            """      AND COLUMN_NAME = 'of_keep_comments'""")
+        type = cr.fetchall()
+        company_obj = self.env['res.company']
+        set_values = []
+        if type and type[0][0] == 'boolean':
+            for company in company_obj.search([]):
+                set_values.append((company, company.of_keep_comments and 1 or 4))
+
+        super(ResCompany, self)._auto_init()
+
+        if set_values:
+            for company, value in set_values:
+                company.write({'of_keep_comments': value})
+
+    of_keep_comments = fields.Selection(
+        [(4, 'Ne pas garder les commentaires'),
+         (1, 'Garder les commentaires'),
+         (2, 'Garder le commentaire du haut'),
+         (3, 'Garder le commentaire du bas')],
+        string=u"(OF) Commentaires devis sur facture", default=1,
         help=u"Permet de récupérer les commentaires du devis sur la facture finale")
 
 class OFSaleConfiguration(models.TransientModel):
     _inherit = 'sale.config.settings'
 
-    of_keep_comments = fields.Boolean(
-        string=u"(OF) Commentaires devis sur facture",
+    of_keep_comments = fields.Selection(
+        [(4, 'Ne pas garder les commentaires'),
+         (1, 'Garder les commentaires'),
+         (2, 'Garder le commentaire du haut'),
+         (3, 'Garder le commentaire du bas')],
+        string=u"(OF) Commentaires devis sur facture", default=1,
         help=u"Permet de récupérer les commentaires du devis sur la facture finale",
         related="company_id.of_keep_comments")
